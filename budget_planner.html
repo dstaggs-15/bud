@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel & Loren's Joint Budget Planner - Dark Mode</title>
+    <style>
+        :root {
+            --bg-color: #131314;
+            --surface-color: #1e1e1e;
+            --text-primary: #e3e3e3;
+            --text-secondary: #9aa0a6;
+            --border-color: #3c4043;
+            --accent-green: #81c995;
+            
+            --color-housing: #8ab4f8;
+            --color-food: #81c995;
+            --color-auto: #fde293;
+            --color-lifestyle: #f28b82;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 40px 20px; 
+            color: var(--text-primary); 
+            line-height: 1.5;
+        }
+
+        .container { 
+            max-width: 700px; 
+            margin: 0 auto; 
+        }
+
+        /* Top Summary Section */
+        .summary-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .stat-block {
+            text-align: center;
+            padding: 0 30px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.green {
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .divider {
+            width: 1px;
+            height: 40px;
+            background-color: var(--border-color);
+        }
+
+        /* Section Titles */
+        h2 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        /* Expense Breakdown Bar */
+        .breakdown-bar {
+            display: flex;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .bar-segment {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Category List */
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .category-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .cat-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .cat-right {
+            font-weight: 500;
+        }
+
+        /* Income Input */
+        .income-container {
+            margin-bottom: 40px;
+        }
+        
+        .income-input-wrapper {
+            background: var(--surface-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: 250px;
+        }
+
+        .income-input-wrapper span {
+            color: var(--text-secondary);
+        }
+
+        .income-input-wrapper input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 500;
+            width: 100%;
+            outline: none;
+        }
+
+        /* Adjust Expenses Section */
+        .expense-category-block {
+            margin-bottom: 30px;
+        }
+
+        .expense-category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .expense-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px 40px;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-group label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .slider-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 6px;
+            border-radius: 3px;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .value-display {
+            background: var(--surface-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        @media (max-width: 600px) {
+            .expense-grid {
+                grid-template-columns: 1fr;
+            }
+            .summary-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .divider {
+                width: 50px;
+                height: 1px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- Summary Header -->
+        <div class="summary-header">
+            <div class="stat-block">
+                <div class="stat-value" id="top-expenses">$3,920</div>
+                <div class="stat-label">Monthly expenses</div>
+            </div>
+            <div class="divider"></div>
+            <div class="stat-block">
+                <div class="stat-value green" id="top-surplus">$1,480</div>
+                <div class="stat-label">Monthly surplus for savings & goals</div>
+            </div>
+            <div class="divider"></div>
+            <div class="stat-block">
+                <div class="stat-value green" id="top-rate">27%</div>
+                <div class="stat-label">Savings rate</div>
+            </div>
+        </div>
+
+        <!-- Expense Breakdown -->
+        <h2>Expense breakdown</h2>
+        <div class="breakdown-bar" id="breakdown-bar">
+            <!-- Segments injected via JS -->
+        </div>
+
+        <div class="category-list" id="category-list">
+            <!-- List injected via JS -->
+        </div>
+
+        <!-- Income -->
+        <h2>Combined monthly income</h2>
+        <div class="income-container">
+            <div class="income-input-wrapper">
+                <span>$</span>
+                <input type="number" id="income-input" value="5400" step="100">
+            </div>
+        </div>
+
+        <!-- Adjust Expenses -->
+        <h2>Adjust your expenses</h2>
+        <div id="sliders-container">
+            <!-- Sliders injected via JS -->
+        </div>
+
+    </div>
+
+    <script>
+        const formatMoney = (amount) => {
+            return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        };
+
+        const categories = [
+            {
+                id: "housing", name: "Housing, Utilities & Home", color: "var(--color-housing)",
+                fields: [
+                    { id: "mortgage", label: "Mortgage (incl. Tax/Ins)", value: 1090, max: 2000, step: 10 },
+                    { id: "utilities", label: "Utilities & Water", value: 210, max: 500, step: 10 },
+                    { id: "internet", label: "Internet", value: 60, max: 150, step: 5 },
+                    { id: "home_maint", label: "Home Maintenance", value: 100, max: 400, step: 10 },
+                    { id: "cleaning", label: "Household Cleaning", value: 60, max: 200, step: 5 }
+                ]
+            },
+            {
+                id: "food", name: "Food & Dining", color: "var(--color-food)",
+                fields: [
+                    { id: "groceries", label: "Groceries", value: 600, max: 1200, step: 25 },
+                    { id: "eating_out", label: "Eating Out", value: 200, max: 800, step: 25 },
+                    { id: "misc_food", label: "Misc Food", value: 75, max: 300, step: 5 }
+                ]
+            },
+            {
+                id: "auto", name: "Auto & Health", color: "var(--color-auto)",
+                fields: [
+                    { id: "gas", label: "Gasoline", value: 500, max: 1000, step: 25 },
+                    { id: "car_insurance", label: "Car Insurance", value: 350, max: 600, step: 10 },
+                    { id: "car_maint", label: "Car Maint & Tags", value: 25, max: 200, step: 5 },
+                    { id: "health_insurance", label: "Health Insurance", value: 280, max: 800, step: 10 }
+                ]
+            },
+            {
+                id: "lifestyle", name: "Lifestyle & Fun", color: "var(--color-lifestyle)",
+                fields: [
+                    { id: "fun_dates", label: "Fun Stuff / Dates", value: 200, max: 800, step: 25 },
+                    { id: "phones", label: "Cell Phones", value: 120, max: 300, step: 5 },
+                    { id: "subscriptions", label: "Subscriptions", value: 50, max: 200, step: 5 }
+                ]
+            }
+        ];
+
+        let state = {
+            income: 5400,
+            values: {}
+        };
+
+        // Initialize state values
+        categories.forEach(cat => {
+            cat.fields.forEach(field => {
+                state.values[field.id] = field.value;
+            });
+        });
+
+        const buildUI = () => {
+            const slidersContainer = document.getElementById('sliders-container');
+            slidersContainer.innerHTML = '';
+
+            categories.forEach(cat => {
+                const block = document.createElement('div');
+                block.className = 'expense-category-block';
+                
+                const header = document.createElement('div');
+                header.className = 'expense-category-header';
+                header.innerHTML = `<span>${cat.name}</span> <span style="color: var(--text-secondary); cursor: pointer;">^</span>`;
+                block.appendChild(header);
+
+                const grid = document.createElement('div');
+                grid.className = 'expense-grid';
+
+                cat.fields.forEach(field => {
+                    const sliderGroup = document.createElement('div');
+                    sliderGroup.className = 'slider-group';
+                    
+                    sliderGroup.innerHTML = `
+                        <label>${field.label}</label>
+                        <div class="slider-controls">
+                            <input type="range" id="range-${field.id}" min="0" max="${field.max}" step="${field.step}" value="${state.values[field.id]}">
+                            <div class="value-display" id="val-${field.id}">${formatMoney(state.values[field.id])}</div>
+                        </div>
+                    `;
+                    grid.appendChild(sliderGroup);
+                });
+
+                block.appendChild(grid);
+                slidersContainer.appendChild(block);
+            });
+
+            // Attach event listeners
+            categories.forEach(cat => {
+                cat.fields.forEach(field => {
+                    const slider = document.getElementById(`range-${field.id}`);
+                    slider.addEventListener('input', (e) => {
+                        const val = parseInt(e.target.value);
+                        state.values[field.id] = val;
+                        document.getElementById(`val-${field.id}`).innerText = formatMoney(val);
+                        updateCalculations();
+                    });
+                });
+            });
+
+            document.getElementById('income-input').addEventListener('input', (e) => {
+                state.income = parseInt(e.target.value) || 0;
+                updateCalculations();
+            });
+        };
+
+        const updateCalculations = () => {
+            let totalExpenses = 0;
+            let categoryTotals = {};
+
+            categories.forEach(cat => {
+                let catTotal = 0;
+                cat.fields.forEach(field => {
+                    catTotal += state.values[field.id];
+                });
+                categoryTotals[cat.id] = catTotal;
+                totalExpenses += catTotal;
+            });
+
+            const surplus = state.income - totalExpenses;
+            const savingsRate = state.income > 0 ? Math.round((surplus / state.income) * 100) : 0;
+
+            // Update Top Header
+            document.getElementById('top-expenses').innerText = formatMoney(totalExpenses);
+            
+            const surplusEl = document.getElementById('top-surplus');
+            surplusEl.innerText = formatMoney(surplus);
+            surplusEl.style.color = surplus >= 0 ? 'var(--accent-green)' : '#f28b82'; // Red if negative
+            
+            const rateEl = document.getElementById('top-rate');
+            rateEl.innerText = `${savingsRate}%`;
+            rateEl.style.color = savingsRate >= 0 ? 'var(--accent-green)' : '#f28b82';
+
+            // Update Breakdown Bar & List
+            const barContainer = document.getElementById('breakdown-bar');
+            const listContainer = document.getElementById('category-list');
+            
+            barContainer.innerHTML = '';
+            listContainer.innerHTML = '';
+
+            categories.forEach(cat => {
+                const catTotal = categoryTotals[cat.id];
+                const percentage = totalExpenses > 0 ? (catTotal / totalExpenses) * 100 : 0;
+
+                // Add Bar Segment
+                if (percentage > 0) {
+                    const segment = document.createElement('div');
+                    segment.className = 'bar-segment';
+                    segment.style.width = `${percentage}%`;
+                    segment.style.backgroundColor = cat.color;
+                    barContainer.appendChild(segment);
+                }
+
+                // Add List Item
+                const listItem = document.createElement('div');
+                listItem.className = 'category-list-item';
+                listItem.innerHTML = `
+                    <div class="cat-left">
+                        <div class="dot" style="background-color: ${cat.color};"></div>
+                        ${cat.name}
+                    </div>
+                    <div class="cat-right">${formatMoney(catTotal)}</div>
+                `;
+                listContainer.appendChild(listItem);
+            });
+        };
+
+        // Init
+        buildUI();
+        updateCalculations();
+    </script>
+</body>
+</html>
